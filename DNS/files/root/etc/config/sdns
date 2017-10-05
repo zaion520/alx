@@ -1,0 +1,6 @@
+
+config sdns
+	option dns2 '114.114.115.115'
+	option dns1 '114.114.114.114'
+	option dns_enabled '0'
+

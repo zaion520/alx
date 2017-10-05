@@ -1,0 +1,33 @@
+#!/bin/sh
+
+#
+# (c) 2016 fw867,koolshare.cn
+#
+
+PORTS=$(ls -l /sys/class/net | grep -c pci)
+ethP=$(expr $PORTS - 1) 
+all=""
+for i in $(seq 0 $ethP)
+do
+	LINK=$(ethtool eth$i | grep Speed | cut -d':' -f 2)
+	case "$LINK" in
+		"link:down") STATUS="未连接";;
+		" 10000Mb/s") STATUS="10G";;
+		" 1000Mb/s") STATUS="1000M";;
+		" 100Mb/s") STATUS="100M";;
+		" 10Mb/s") STATUS="10M";;
+		"1000") STATUS="1000M";;
+		"100") STATUS="100M";;
+		"10") STATUS="10M";;
+		"0") STATUS="-";;
+		"1") STATUS="连接";;
+		*) STATUS="未知";;
+	esac
+  LINK=$(ethtool eth$i | grep 'Link detected' | cut -d':' -f 2)
+	case "$LINK" in
+		" no") STATUS="未连接";;
+	esac
+all="$all 网口$i $STATUS  ｜  "
+done
+echo ${all%｜*}
+exit 0

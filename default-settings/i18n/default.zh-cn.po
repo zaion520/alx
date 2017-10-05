@@ -1,0 +1,43 @@
+msgid "Processor"
+msgstr "处理器"
+
+msgid "Architecture"
+msgstr "架构"
+
+msgid "CPU Temperature"
+msgstr "CPU温度"
+
+msgid "CPU frequency"
+msgstr "CPU频率"
+
+msgid "Baseboard Product"
+msgstr "主板型号"
+
+msgid "CPU Info"
+msgstr "CPU信息"
+
+msgid "CPU Model"
+msgstr "CPU型号"
+
+
+msgid "ETH INFO"
+msgstr "网卡状态"
+
+
+msgid "ETH"
+msgstr "网卡"
+
+msgid "Startup Delay"
+msgstr "延迟启动"
+
+msgid "Not enabled"
+msgstr "未启动"
+
+msgid "seconds"
+msgstr "秒"
+
+
+
+
+
+

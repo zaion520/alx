@@ -1,0 +1,7 @@
+config global
+	option time_update '4'
+	option default_acl_mode 'http'
+	option reboot_mode 'disable'
+	option filter_mode 'adblock'
+	option adblock '1'
+	option enabled '0'
