@@ -149,24 +149,27 @@ start_rules() {
     	iptables -t nat -A SHADOWSOCKS_GAM -p tcp -m set ! --match-set $IPSET_CDN dst  -m  set ! --match-set  $IPSET_CH dst  -j REDIRECT --to $(uci_get_by_name $GLOBAL_SERVER local_port)
 	ip rule add fwmark 0x01 table 100
 	ip route add local 0.0.0.0/0 dev lo table 100
-	iptables -t mangle -N SHADOWSOCKS
-	iptables -t mangle -I PREROUTING -p udp -j SHADOWSOCKS
-	iptables -t mangle -A SHADOWSOCKS -d 0.0.0.0/8 -j RETURN
-	iptables -t mangle -A SHADOWSOCKS -d 10.0.0.0/8 -j RETURN
-	iptables -t mangle -A SHADOWSOCKS -d 127.0.0.0/8 -j RETURN
-	iptables -t mangle -A SHADOWSOCKS -d 169.254.0.0/16 -j RETURN
-	iptables -t mangle -A SHADOWSOCKS -d 172.16.0.0/12 -j RETURN
-	iptables -t mangle -A SHADOWSOCKS -d 192.168.0.0/16 -j RETURN
-	iptables -t mangle -A SHADOWSOCKS -d 224.0.0.0/4 -j RETURN
-	iptables -t mangle -A SHADOWSOCKS -d 240.0.0.0/4 -j RETURN
-	[ -n "$udp_server" ] && iptables -t mangle -A SHADOWSOCKS -d $udp_server -j RETURN
-	#iptables -t mangle -A SHADOWSOCKS -p udp -j RETURN
-	iptables -t mangle -N SHADOWSOCKS_GAM
-	iptables -t mangle -A SHADOWSOCKS_GAM -p udp -m set --match-set $IPSET_GFW dst -j TPROXY --on-port $(uci_get_by_name $GLOBAL_SERVER local_port) --tproxy-mark 0x01/0x01
-	iptables -t mangle -A SHADOWSOCKS_GAM -p udp -m set ! --match-set $IPSET_CH dst -m  set ! --match-set  $IPSET_CH dst -j TPROXY --on-port $(uci_get_by_name $GLOBAL_SERVER local_port) --tproxy-mark 0x01/0x01
+	if [ -n "$udp_server" ];then
+		iptables -t mangle -N SHADOWSOCKS
+		iptables -t mangle -I PREROUTING -p udp -j SHADOWSOCKS
+		iptables -t mangle -A SHADOWSOCKS -d 0.0.0.0/8 -j RETURN
+		iptables -t mangle -A SHADOWSOCKS -d 10.0.0.0/8 -j RETURN
+	 	iptables -t mangle -A SHADOWSOCKS -d 127.0.0.0/8 -j RETURN
+		iptables -t mangle -A SHADOWSOCKS -d 169.254.0.0/16 -j RETURN
+		iptables -t mangle -A SHADOWSOCKS -d 172.16.0.0/12 -j RETURN
+		iptables -t mangle -A SHADOWSOCKS -d 192.168.0.0/16 -j RETURN
+	 	iptables -t mangle -A SHADOWSOCKS -d 224.0.0.0/4 -j RETURN
+		iptables -t mangle -A SHADOWSOCKS -d 240.0.0.0/4 -j RETURN
+		iptables -t mangle -A SHADOWSOCKS -d $udp_server -j RETURN
+		iptables -t mangle -N SHADOWSOCKS_GAM
+		iptables -t mangle -A SHADOWSOCKS_GAM -p udp -m set --match-set $IPSET_GFW dst -j TPROXY --on-port $(uci_get_by_name $GLOBAL_SERVER local_port) --tproxy-mark 0x01/0x01
+	 	iptables -t mangle -A SHADOWSOCKS_GAM -p udp -m set ! --match-set $IPSET_CH dst -m  set ! --match-set  $IPSET_CH dst -j TPROXY --on-port $(uci_get_by_name $GLOBAL_SERVER local_port) --tproxy-mark 0x01/0x01
+	fi
 	load_acl
 	iptables -t nat -A SHADOWSOCKS -j $(get_action_chain $(uci_get_by_type global gfw_enable))
 	[ "$(uci_get_by_type global gfw_enable)" == "gm" ] && iptables -t mangle -A SHADOWSOCKS -j $(get_action_chain $(uci_get_by_type global gfw_enable))
+
+
 	
 }
 
@@ -208,14 +211,16 @@ get_jump_mode(){
 }
 
 clean_firewall_rule() {
-  	ib_nat_exist=`iptables -t nat -L PREROUTING | grep -c SHADOWSOCKS`
+  	#ib_nat_exist=`iptables -t nat -L PREROUTING | grep -c SHADOWSOCKS`
+	ib_nat_exist=`iptables -t nat -L OUTPUT | grep -c  $(uci_get_by_name $GLOBAL_SERVER local_port)`
+
   	if [ ! -z "$ib_nat_exist" ];then
      		until [ "$ib_nat_exist" = 0 ]
     		do 
-		#echo port:$(uci_get_by_name $GLOBAL_SERVER local_port)
+		echo port:$(uci_get_by_name $GLOBAL_SERVER local_port)
        		iptables -t nat -D OUTPUT -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-ports $(uci_get_by_name $GLOBAL_SERVER local_port) 2>/dev/null
        		iptables -t nat -D PREROUTING -p tcp -j SHADOWSOCKS 2>/dev/null
-       		iptables -t nat -D PREROUTING  -p udp --dport 53 -j DNAT --to $lanip 2>/dev/null
+       		#iptables -t nat -D PREROUTING  -p udp --dport 53 -j DNAT --to $lanip 2>/dev/null
        		iptables -t mangle -D PREROUTING -p udp -j SHADOWSOCKS 2>/dev/null
        		ib_nat_exist=`expr $ib_nat_exist - 1`
   		done
@@ -464,6 +469,7 @@ stop() {
 	  	delete firewall.shadowsocksr
 	  	commit firewall
 	EOT
+	
  	del_firewall_rule
 	stop_ipset
 	ipset -F cdn >/dev/null 2>&1 &
