@@ -230,11 +230,11 @@ dns_takeover(){
 			iptables -t nat -A PREROUTING -p udp --dport 53 -j DNAT --to $lan_ipaddr >/dev/null 2>&1
 		fi
 	else
-		if [ "$ss_chromecast" -eq 0 ] || [ "$ss_enable" -eq 0 ]; then
+	
 			if [ -n "$chromecast_nu" ]; then
 				iptables -t nat -D PREROUTING $chromecast_nu >/dev/null 2>&1
 			fi
-		fi
+		
 	fi
 }
 
