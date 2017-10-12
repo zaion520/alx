@@ -4,10 +4,11 @@ adbyby_enable=$(uci get adbyby.@adbyby[0].enable)
 
 if [ $adbyby_enable -eq 1 ]; then
 	if pidof adbyby>/dev/null; then
-	  /etc/init.d/adbyby reload_rule
-	 else
-	   /etc/init.d/adbyby restart
-  fi
+	  	/etc/init.d/adbyby reload_rule
+	else
+	   	/etc/init.d/adbyby restart
+  	fi
+	sh /usr/share/adbyby/adupdate.sh > /dev/null 2>&1 &
 fi
 
 
