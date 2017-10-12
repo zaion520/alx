@@ -166,6 +166,5 @@ do
         	normal_flag=0   
    	fi
 
-
 done
 }
