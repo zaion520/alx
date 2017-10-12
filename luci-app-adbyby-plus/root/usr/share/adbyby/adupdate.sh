@@ -2,11 +2,11 @@
 a=0
 b=0
 
-
+sleep 10
 update_source=$(uci get adbyby.@adbyby[0].update_source 2>/dev/null)
 rm -f /tmp/lazy.txt /tmp/video.txt /tmp/user.action
 rm -f /usr/share/adbyby/data/*.bak
-#/usr/bin/wget -t 1 -T 10 -O /tmp/user.action http://update.adbyby.com/rule3/user.action
+
 if [ $update_source -eq 1 ]; then
 /usr/bin/wget -t 1 -T 10 -O /tmp/lazy.txt http://update.adbyby.com/rule3/lazy.jpg
 ret1=$?
@@ -34,10 +34,10 @@ oldMD5=`md5sum  /usr/share/adbyby/data/video.txt | awk '{print $1}'`
 
 
 if [ "$b" = "1" ] ;then
-umount /usr/share/adbyby/data
+/etc/init.d/adbyby stop
 mv /tmp/video.txt /usr/share/adbyby/data/video.txt 
 mv /tmp/lazy.txt /usr/share/adbyby/data/lazy.txt 
-#mv /tmp/user.action /usr/share/adbyby/user.action 
+
 /etc/init.d/adbyby restart
 fi
 
