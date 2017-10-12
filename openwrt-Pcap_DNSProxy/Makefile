@@ -25,6 +25,7 @@ PKG_MAINTAINER:=Chengr28 <chengr28@gmail.com>
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
 
+TARGET_CFLAGS += -ansi -pedantic -Wall -Wextra
 TARGET_CFLAGS += $(FPIC)
 
 CMAKE_OPTIONS += \
