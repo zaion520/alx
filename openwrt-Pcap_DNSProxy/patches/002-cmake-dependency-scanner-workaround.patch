@@ -1,6 +1,6 @@
 --- a/Source/Pcap_DNSProxy/Platform.h
 +++ b/Source/Pcap_DNSProxy/Platform.h
-@@ -372,7 +372,7 @@
+@@ -373,7 +373,7 @@
  	#define SODIUM_STATIC
  #endif
  #if defined(ENABLE_LIBSODIUM)
@@ -9,7 +9,7 @@
  #endif
  
  //WinPcap header, always enabled(Windows)
-@@ -386,7 +386,7 @@
+@@ -387,7 +387,7 @@
  	#define HAVE_REMOTE                //WinPcap preprocessor definitions
  #endif
  #if defined(ENABLE_PCAP)
@@ -18,32 +18,6 @@
  #endif
  
  //Windows API headers
-@@ -436,19 +436,19 @@
- #endif
- #if defined(PLATFORM_WIN64)
- #if defined(ENABLE_LIBSODIUM)
--	#pragma comment(lib, "..\\Dependency\\LibSodium\\LibSodium_x64.lib")
-+	#pragma comment(lib, "LibSodium\\LibSodium_x64.lib")
- #endif
- #if defined(ENABLE_PCAP)
--	#pragma comment(lib, "..\\Dependency\\WinPcap\\WPCAP_x64.lib")
--	#pragma comment(lib, "..\\Dependency\\WinPcap\\Packet_x64.lib")
-+	#pragma comment(lib, "WinPcap\\WPCAP_x64.lib")
-+	#pragma comment(lib, "WinPcap\\Packet_x64.lib")
- #endif
- #elif defined(PLATFORM_WIN32)
- #if defined(ENABLE_LIBSODIUM)
--	#pragma comment(lib, "..\\Dependency\\LibSodium\\LibSodium_x86.lib")
-+	#pragma comment(lib, "LibSodium\\LibSodium_x86.lib")
- #endif
- #if defined(ENABLE_PCAP)
--	#pragma comment(lib, "..\\Dependency\\WinPcap\\WPCAP_x86.lib")
--	#pragma comment(lib, "..\\Dependency\\WinPcap\\Packet_x86.lib")
-+	#pragma comment(lib, "WinPcap\\WPCAP_x86.lib")
-+	#pragma comment(lib, "WinPcap\\Packet_x86.lib")
- #endif
- #endif
- 
 @@ -531,8 +531,8 @@
  #ifndef SODIUM_STATIC
  	#define SODIUM_STATIC
