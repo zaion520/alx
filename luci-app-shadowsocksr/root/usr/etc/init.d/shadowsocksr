@@ -1,0 +1,30 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2017 yushi By Alx
+# Licensed to the public under the GNU General Public License v3.
+
+START=99
+STOP=15
+
+start() { 
+	sh /usr/share/shadowsocksr/ssr.sh start > /dev/null 2>&1	
+}
+
+stop() {
+	sh /usr/share/shadowsocksr/ssr.sh stop > /dev/null 2>&1
+}
+boot() {
+
+
+  	sleep $(uci_get_by_type global dalay_time)  
+   	start
+  	return 0
+
+}
+
+
+
+
+
+
+
+

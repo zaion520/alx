@@ -25,7 +25,7 @@ define Package/dns2socks/Default
   CATEGORY:=Network
   SUBMENU:=IP Addresses and Names
   TITLE:=The utility to resolve DNS requests via a SOCKS5 tunnel.
-  URL:=http://dns2socks.sourceforge.net/
+  URL:=https://ayera.dl.sourceforge.net
   MAINTAINER:=ghostmaker
   DEPENDS:=+libpthread
 endef

@@ -1,0 +1,30 @@
+
+config global
+	option tunnel_forward '8.8.8.8:53'
+	option global_server 'nil'
+	option gfw_enable 'gfw'
+	option auto_update '1'
+	option week_update '7'
+	option time_update '4'
+
+config socks5_proxy
+	option server 'nil'
+	option local_port '1080'
+
+config access_control
+	option lan_ac_mode '0'
+	option router_proxy '1'
+	
+
+config server_global
+	option enable_server '0'
+
+
+
+config acl_rule
+	option proxy_mode 'disable'
+
+
+
+
+

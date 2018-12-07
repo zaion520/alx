@@ -1,0 +1,203 @@
+#!/bin/sh
+# ver: 2017-05-01 by tianbaoha
+# ver: 2018-12-07 by klaus
+dnspod_ak=`uci get dnspod.base.app_key 2> /dev/null`
+dnspod_sk=`uci get dnspod.base.app_secret 2> /dev/null`
+dnspod_record_id=`uci get dnspod.base.record_id 2> /dev/null`
+time=`uci get dnspod.base.time 2> /dev/null`
+dnspod_enable=`uci get dnspod.base.enable`
+dnspod_domain=`uci get dnspod.base.main_domain 2> /dev/null`
+dnspod_name=`uci get dnspod.base.sub_domain 2> /dev/null`
+interface=`uci get dnspod.base.interface 2> /dev/null`
+DATE=$(date +'%Y-%m-%d %H:%M:%S')
+timestamp=`date -u "+%Y-%m-%dT%H%%3A%M%%3A%SZ"`
+dnspod_ID_Token="$dnspod_ak","$dnspod_sk"
+interval=10
+logfile=/var/log/dnspod.log
+
+maindomain=$dnspod_domain
+subdomain=$dnspod_name
+DT=`date +"%Y-%m-%d %H:%M:%S"`
+
+get_local_ip() {
+	#localIP=`nvram get wan_ipaddr`
+
+	localIP=$(ifconfig $interface 2> /dev/null | grep 'inet addr' | awk '{print $2}' | cut -d: -f2  2> /dev/null)
+	# localIP=`curl -s http://members.3322.org/dyndns/getip 2>/dev/null` || localIP=`curl -s http://1212.ip138.com/ic.asp | grep -Eo '([0-9]+\.){3}[0-9]+'` || localIP=`curl http://whatismyip.akamai.com/ 2>/dev/null`
+	case "$localIP" in
+	   [1-9][0-9]*)
+		echo -e "\n$DT local IP: $localIP" >> $logfile
+	;;
+	*)
+		echo "$DT network error" >> $logfile
+		exit 0
+	;;
+	esac
+}
+
+get_record_IP() {
+	if test "$subdomain" = "@" ; then
+		domain=$maindomain
+	else
+		domain=$subdomain.$maindomain
+	fi
+	Address=`curl -sk http://119.29.29.29/d?dn=$domain`
+	if test "$?" -eq "0" ; then
+		echo $Address | sed s/\;/"\n"/g | sed -n '1p'
+	fi
+}
+
+get_recordIP() {
+	domainID=`get_domainID`
+	recordID=`get_recordID`
+	recordIP=`send_request "Record.Info" "domain_id=$domainID&record_id=$recordID"`
+	recordIP=`echo $recordIP | grep -Eo '"value":"[0-9\.]*"' | cut -d':' -f2 | tr -d '"'`
+	case "$recordIP" in
+	test1-9][0-9*)
+		echo $recordIP
+	;;
+	esac
+}
+
+get_domainID() {
+	domainID=`send_request "Domain.Info" "domain=$maindomain"`
+	domainID=`echo $domainID | grep -Eo '"id":"[0-9]+"' | cut -d':' -f2 | tr -d '"'`
+	echo $domainID
+}
+
+get_recordID() {
+	recordID=`send_request "Record.List" "domain_id=$domainID&sub_domain=$subdomain"`
+	recordID=`echo $recordID | grep -Eo '"id":"[0-9]+"' | cut -d':' -f2 | tr -d '"'| head -n1`
+	echo $recordID
+}
+
+get_recordRS() {
+	recordRS=`send_request "Record.Ddns" "domain_id=$domainID&record_id=$recordID&sub_domain=$subdomain&record_type=A&value=$localIP&record_line=%E9%BB%98%E8%AE%A4"`
+	echo $recordRS
+}
+
+get_message() {
+	local message
+	message=`echo $recordRS | grep -Eo '"message":"[^"]*"' | cut -d':' -f2 | tr -d '"'`
+	echo $message
+}
+
+send_request() {
+	local api_url="https://dnsapi.cn/${1:?'Info.Version'}"
+	if test "${dnspod_ID_Token}x" = "x" ; then
+		local param="login_email=$dnspod_username&login_password=$dnspod_password&format=json&$2"
+	else
+		local param="login_token=$dnspod_ID_Token&format=json&$2"
+	fi
+	curl -sk -X POST $api_url -d $param
+}
+
+ddns_update() {
+	domainID=`get_domainID`
+	recordID=`get_recordID`
+	if test "$recordID" = "" ; then
+		recordRS=`send_request "Record.Create" "domain_id=$domainID&sub_domain=$subdomain&record_type=A&value=$localIP&record_line=%E9%BB%98%E8%AE%A4"`
+		echo "$DT added record $subdomain.$maindomain" >> $logfile
+	else
+		recordRS=`get_recordRS`
+	fi
+	recordIP=`echo $recordRS | grep -Eo '"value":"[0-9\.]*"' | cut -d':' -f2 | tr -d '"'`
+	test -z "$recordIP"  && recordIP=`get_recordIP`
+	if test "$recordIP" = "$localIP" ; then
+		recordCD=`echo $recordRS | grep -Eo '"code":"[0-9]+"' | cut -d':' -f2 | tr -d '"'`
+		if test "$recordCD" = "1"  ; then
+			recordID=`get_recordID`
+			recordRS=`get_recordRS`
+			echo $recordRS | grep -Eo '"value":"[0-9\.]*"' | cut -d':' -f2 | tr -d '"'
+			return 0
+		fi
+		echo "$DT error message: `get_message`" >> $logfile
+		return 1
+	fi
+	echo "$DT error message: `get_message`" >> $logfile
+	return 1
+}
+
+check_dnspod() {
+	get_local_ip
+	record_ip=`get_recordIP`
+	case "$record_ip" in
+	[1-9][0-9*)
+		w_ck=0
+	;;
+	*)
+		w_ck=1
+	;;
+	esac
+	if test "$w_ck" = "1" ; then
+		record_ip=`get_record_IP`
+		if test "$?" -ne "0" ; then
+			echo -e "$DT record IP: N/A\n$DT get record IP failed" >> $logfile
+			exit 0
+		fi
+	fi
+	echo "$DT record IP: $record_ip" >> $logfile
+	if test "$localIP" = "$record_ip" ; then
+		echo -e "$DT unchanged, skip\n" >> $logfile
+		exit 0
+	else
+		echo "$DT updating..." >> $logfile
+	fi
+	postRS=`ddns_update`
+	if test "$?" -eq "0" ; then
+		echo "$DT update success $subdomain.$maindomain ($postRS)" >> $logfile
+	else
+		echo "$DT update failed, check settings" >> $logfile
+	fi
+	
+}
+
+monitor(){
+	wirtecron=$(cat /etc/crontabs/root | grep "$time * * * *" | grep dnspod)
+	if test -z "$wirtecron" ;then
+		sed -i '/dnspod/d' /etc/crontabs/root > /dev/null 2>&1
+		echo "*/$time * * * * /usr/sbin/dnspod restart #dnspod watchdog" >> /etc/crontabs/root
+	fi
+}
+
+clean_log(){
+	logrow=$(grep -c "" /var/log/dnspod.log)
+	if test $logrow -ge 15 ;then
+		cat /dev/null > /var/log/dnspod.log
+		echo "$DATE Log条数超限，清空处理！" >> /var/log/dnspod.log
+	fi
+}
+
+
+start() {
+	stop
+	[ "$dnspod_enable" != "1" ] && exit 0
+	monitor
+	check_dnspod
+}
+
+stop() {
+	sed -i '/dnspod/d' /etc/crontabs/root >/dev/null 2>&1
+}
+
+clean_log
+
+
+
+case "$1" in
+start)
+	start
+;;
+stop)
+	stop
+;;
+restart)
+	[ "$dnspod_enable" != "1" ] && exit 0
+	monitor
+	check_dnspod
+;;
+
+*)
+	echo "Usage: $0 [start stop restart]"
+;;
+esac

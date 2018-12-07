@@ -1,0 +1,169 @@
+#!/bin/sh 
+#
+# Copyright (C) 2017 ShadowsocksR By Alx
+# This is free software, licensed under the GNU General Public License v3.
+# See /LICENSE for more information.
+#
+#
+
+
+NAME=shadowsocksr
+
+uci_get_by_name() {
+	local ret=$(uci get $NAME.$1.$2 2>/dev/null)
+	echo ${ret:=$3}
+}
+
+uci_get_by_type() {
+	local ret=$(uci get $NAME.@$1[0].$2 2>/dev/null)
+	echo ${ret:=$3}
+}
+
+server_process_count=$1
+redir_tcp_process=$2
+redir_udp_process=$3
+tunnel_process=$4
+kcp_process=$5
+local_process=$6
+dns_process=$7
+if  [ -z "$dns_process" ] ;then
+	dns_process=0
+fi
+
+
+
+
+
+i=0
+
+GLOBAL_SERVER=$(uci_get_by_type global global_server)
+local server=$(uci_get_by_name $GLOBAL_SERVER server)
+local kcp_port=$(uci_get_by_name $GLOBAL_SERVER kcp_port)
+local server_port=$(uci_get_by_name $GLOBAL_SERVER server_port)
+local password=$(uci_get_by_name $GLOBAL_SERVER kcp_password)
+local kcp_param=$(uci_get_by_name $GLOBAL_SERVER kcp_param)
+local tunnel_forward=$(uci_get_by_name $GLOBAL_SERVER tunnel_forward)
+[ "$password" != "" ] && password="--key "${password}
+
+local sock5_port=$(uci_get_by_type socks5_proxy local_port 1080)
+
+if echo $server|grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$">/dev/null; then         
+	server=${server}
+else
+  	server=$server
+fi
+
+
+
+
+
+
+while [ "1" = "1" ]  #死循环
+do 
+   sleep 30
+#redir tcp
+	if [ $redir_tcp_process -gt 0 ] ;then
+		icount=`ps -w | grep ssr-retcp |grep -v grep| wc -l`
+		if [ $icount = 0 ] ;then
+			logger -t "$NAME" "ssr redir tcp error.restart!"
+			 /etc/init.d/shadowsocksr restart 
+		exit 0
+		fi
+	fi
+#redir udp
+	if [ $redir_udp_process -gt 0 ] ;then
+		icount=`ps -w  | grep ssr-reudp|grep -v grep| wc -l`
+		if [ $icount = 0 ] ;then
+			logger -t "$NAME" "ssr redir udp error.restart!"
+			 /etc/init.d/shadowsocksr restart 
+		exit 0
+		fi
+	fi
+#tunnel
+	if [ $tunnel_process -gt 0 ] ;then
+		icount=`ps -w  | grep ssr-tunnel |grep -v grep| wc -l`
+		if [ $icount = 0 ] ;then
+			logger -t "$NAME" "ssr tunnel error.restart!"
+			 /etc/init.d/shadowsocksr restart 
+			exit 0
+		fi
+	fi
+#local
+      	if [ $local_process -gt 0 ] ;then
+      		icount=`ps -w  | grep ssr-local |grep -v grep| wc -l`
+      		if [ $icount -lt $local_process ]  #如果进程挂掉就重启它
+      		then
+      			logger -t "$NAME" "ssr local error.restart!"
+      			killall -q -9 ssr-local
+
+			( /usr/bin/ssr-local -c /var/etc/shadowsocksr_s.json -u -l $sock5_port -f /var/run/ssr-local.pid &)
+      		fi   
+      	fi
+#dns
+      	if [ $dns_process -eq 1 ] ;then
+      		icount=`ps -w  | grep ssr-dns |grep -v grep| wc -l`
+      		if [ $icount -lt $dns_process ]  #如果进程挂掉就重启它
+      		then
+      			logger -t "$NAME" "ssr dns tunnel error.restart!"
+      			killall -q -9 ssr-tunnel
+
+			( /usr/bin/ssr-tunnel -c /var/etc/shadowsocksr.json -b 0.0.0.0 -u -l 1053 -L $(uci_get_by_type global tunnel_forward 8.8.4.4:53) -f /var/run/ssr-dns.pid &)
+      		fi   
+      	fi      
+
+      	if [ $dns_process -eq 2 ] ;then
+      		icount=`ps -w  | grep dns2socks |grep -v grep| wc -l`
+      		if [ $icount -lt 1 ]  #如果进程挂掉就重启它
+      		then
+      			logger -t "$NAME" "ssr dns tunnel error.restart!"
+      			killall -q -9 dns2socks 
+  			killall -q -9 ssr-local 
+		         /usr/bin/ssr-local \
+			-c $CONFIG_FILE \
+			-l $(uci_get_by_type socks5_proxy local_port 1080) \
+			-f /var/run/ssr-local.pid
+
+			/usr/bin/dns2socks \
+			127.0.0.1:$(uci_get_by_type socks5_proxy local_port) \
+			$(uci_get_by_type global tunnel_forward 8.8.4.4:53) \
+			127.0.0.1:1053 \
+			>/dev/null 2>&1 &
+      		fi   
+      	fi    
+
+     	if [ $dns_process -eq 3 ] ;then
+      		icount=`ps -w  | grep Pcap_DNSProxy |grep -v grep| wc -l`
+      		if [ $icount -lt 1 ]  #如果进程挂掉就重启它
+      		then
+      			logger -t "$NAME" "ssr dns tunnel error.restart!"
+      			killall -q Pcap_DNSProxy 
+		       /usr/sbin/Pcap_DNSProxy \
+			 -c /etc/pcap-dnsproxy
+      		fi   
+      	fi 
+
+     	if [ $dns_process -eq 4 ] ;then
+      		icount=`ps -w  | grep pdnsd |grep -v grep| wc -l`
+      		if [ $icount -lt 1 ]  #如果进程挂掉就重启它
+     	 	then
+      			logger -t "$NAME" "ssr dns tunnel error.restart!"
+      			killall -q pdnsd 
+			/usr/sbin/pdnsd -c /var/etc/pdnsd.conf -d
+      		fi   
+      	fi 
+
+     	if [ $dns_process -eq 5 ] ;then
+      		icount=`ps -w  | grep dnsproxy |grep -v grep| wc -l`
+      		if [ $icount -lt 1 ]  #如果进程挂掉就重启它
+     	 	then
+      			logger -t "$NAME" "ssr dns tunnel error.restart!"
+      			killall -q dnsproxy
+			/usr/bin/dnsproxy \
+						-p 1053 \
+						-R $dnss \
+						-P $dnsp \
+						-d	\
+						>/dev/null 2>&1 &
+      		fi   
+      	fi 
+done

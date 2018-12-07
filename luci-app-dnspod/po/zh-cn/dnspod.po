@@ -1,0 +1,2 @@
+msgid "Dnspod Client"
+msgstr "Dnspod 客户端"

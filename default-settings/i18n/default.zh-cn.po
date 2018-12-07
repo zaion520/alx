@@ -36,8 +36,41 @@ msgstr "未启动"
 msgid "seconds"
 msgstr "秒"
 
+msgid "V2ray Servers Setting"
+msgstr "V2ray服务器列表"
 
+msgid "Set Blacklist"
+msgstr "设置黑名单"
 
+msgid "These had been joined websites will use proxy,but only GFW model.Please input the domain names of websites,every line can input only one website domain.For example,google.com."
+msgstr "这些已经加入的网站将使用代理，但只使用GFW模式。请输入网站的域名，每行只能输入一个网站域名。例如，google.com。"
 
+msgid "Set whitelist"
+msgstr "设置白名单"
 
+msgid "Join the white list of domain names will not go agent."
+msgstr "加入白名单的域名不会去代理。"
 
+msgid "These had been joined ip addresses will not use proxy.Please input the ip address or ip address segment,every line can input only one ip address.For example,112.123.134.145/24 or 112.123.134.145."
+msgstr "这些已加入的ip地址将不使用代理。请输入ip地址或ip地址段，每行只能输入一个ip地址。例如，112.123.134.145/24或112.123.134.145。"
+
+msgid "LAN Hosts"
+msgstr "局域网主机"
+
+msgid "Proxy Type"
+msgstr "代理模式"
+
+msgid "Dest Ports"
+msgstr "端口设置"
+
+msgid "server type"
+msgstr "服务器类型"
+
+msgid "Transport"
+msgstr "传送协议"
+
+msgid "Camouflage Type"
+msgstr "伪装类型"
+
+msgid "SSR Servers list"
+msgstr "SSR 服务器列表"
