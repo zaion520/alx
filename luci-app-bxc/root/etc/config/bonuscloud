@@ -1,8 +1,7 @@
 
 config general 'general'
 	option enabled '0'
-	option email 'jquan.gdts@gmail.com'
-	option bcode '1025-0f8c939e-7865-46bd-83ff-c20b5a26359b'
+
 
 config more 'more'
 
