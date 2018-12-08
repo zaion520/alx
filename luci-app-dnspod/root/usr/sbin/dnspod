@@ -155,15 +155,15 @@ monitor(){
 	wirtecron=$(cat /etc/crontabs/root | grep "*/$time * * * *" | grep dnspod)
 	if test -z "$wirtecron" ;then
 		sed -i '/dnspod/d' /etc/crontabs/root > /dev/null 2>&1
-		echo "*/$time * * * * /usr/sbin/dnspod restart #dnspod watchdog" >> /etc/crontabs/root
+		echo "*/$time * * * * /usr/sbin/dnspod restart" >> /etc/crontabs/root
 	fi
 }
 
 clean_log(){
 	logrow=$(grep -c "" /var/log/dnspod.log)
-	if test $logrow -ge 15 ;then
+	if test $logrow -ge 45 ;then
 		cat /dev/null > /var/log/dnspod.log
-		echo "$DATE LogÌõÊý³¬ÏÞ£¬Çå¿Õ´¦Àí£¡" >> /var/log/dnspod.log
+		echo "$DATE Clean Logger ¡" >> /var/log/dnspod.log
 	fi
 }
 
