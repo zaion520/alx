@@ -153,7 +153,7 @@ check_dnspod() {
 }
 
 monitor(){
-	wirtecron=$(cat /etc/crontabs/root | grep "$time * * * *" | grep dnspod)
+	wirtecron=$(cat /etc/crontabs/root | grep "*/$time * * * *" | grep dnspod)
 	if test -z "$wirtecron" ;then
 		sed -i '/dnspod/d' /etc/crontabs/root > /dev/null 2>&1
 		echo "*/$time * * * * /usr/sbin/dnspod restart #dnspod watchdog" >> /etc/crontabs/root
@@ -164,7 +164,7 @@ clean_log(){
 	logrow=$(grep -c "" /var/log/dnspod.log)
 	if test $logrow -ge 15 ;then
 		cat /dev/null > /var/log/dnspod.log
-		echo "$DATE LogÌõÊý³¬ÏÞ£¬Çå¿Õ´¦Àí£¡" >> /var/log/dnspod.log
+		echo "$DATE LogÃŒÃµÃŠÃ½Â³Â¬ÃÃžÂ£Â¬Ã‡Ã¥Â¿Ã•Â´Â¦Ã€Ã­Â£Â¡" >> /var/log/dnspod.log
 	fi
 }
 
@@ -180,9 +180,6 @@ stop() {
 	sed -i '/dnspod/d' /etc/crontabs/root >/dev/null 2>&1
 }
 
-clean_log
-
-
 
 case "$1" in
 start)
@@ -192,7 +189,9 @@ stop)
 	stop
 ;;
 restart)
+	stop
 	[ "$dnspod_enable" != "1" ] && exit 0
+	clean_log
 	monitor
 	check_dnspod
 ;;
