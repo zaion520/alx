@@ -14,10 +14,9 @@ timestamp=`date -u "+%Y-%m-%dT%H%%3A%M%%3A%SZ"`
 dnspod_ID_Token="$dnspod_ak","$dnspod_sk"
 interval=10
 logfile=/var/log/dnspod.log
-
 maindomain=$dnspod_domain
 subdomain=$dnspod_name
-DT=`date +"%Y-%m-%d %H:%M:%S"`
+
 
 get_local_ip() {
 	#localIP=`nvram get wan_ipaddr`
@@ -26,10 +25,10 @@ get_local_ip() {
 	# localIP=`curl -s http://members.3322.org/dyndns/getip 2>/dev/null` || localIP=`curl -s http://1212.ip138.com/ic.asp | grep -Eo '([0-9]+\.){3}[0-9]+'` || localIP=`curl http://whatismyip.akamai.com/ 2>/dev/null`
 	case "$localIP" in
 	   [1-9][0-9]*)
-		echo -e "\n$DT local IP: $localIP" >> $logfile
+		echo -e "\n$DATE local IP: $localIP" >> $logfile
 	;;
 	*)
-		echo "$DT network error" >> $logfile
+		echo "$DATE network error" >> $logfile
 		exit 0
 	;;
 	esac
@@ -97,7 +96,7 @@ ddns_update() {
 	recordID=`get_recordID`
 	if test "$recordID" = "" ; then
 		recordRS=`send_request "Record.Create" "domain_id=$domainID&sub_domain=$subdomain&record_type=A&value=$localIP&record_line=%E9%BB%98%E8%AE%A4"`
-		echo "$DT added record $subdomain.$maindomain" >> $logfile
+		echo "$DATE added record $subdomain.$maindomain" >> $logfile
 	else
 		recordRS=`get_recordRS`
 	fi
@@ -111,10 +110,10 @@ ddns_update() {
 			echo $recordRS | grep -Eo '"value":"[0-9\.]*"' | cut -d':' -f2 | tr -d '"'
 			return 0
 		fi
-		echo "$DT error message: `get_message`" >> $logfile
+		echo "$DATE error message: `get_message`" >> $logfile
 		return 1
 	fi
-	echo "$DT error message: `get_message`" >> $logfile
+	echo "$DATE error message: `get_message`" >> $logfile
 	return 1
 }
 
@@ -132,22 +131,22 @@ check_dnspod() {
 	if test "$w_ck" = "1" ; then
 		record_ip=`get_record_IP`
 		if test "$?" -ne "0" ; then
-			echo -e "$DT record IP: N/A\n$DT get record IP failed" >> $logfile
+			echo -e "$DATE record IP: N/A\n$DATE get record IP failed" >> $logfile
 			exit 0
 		fi
 	fi
-	echo "$DT record IP: $record_ip" >> $logfile
+	echo "$DATE record IP: $record_ip" >> $logfile
 	if test "$localIP" = "$record_ip" ; then
-		echo -e "$DT unchanged, skip\n" >> $logfile
+		echo -e "$DATE unchanged, skip\n" >> $logfile
 		exit 0
 	else
-		echo "$DT updating..." >> $logfile
+		echo "$DATE updating..." >> $logfile
 	fi
 	postRS=`ddns_update`
 	if test "$?" -eq "0" ; then
-		echo "$DT update success $subdomain.$maindomain ($postRS)" >> $logfile
+		echo "$DATE update success $subdomain.$maindomain ($postRS)" >> $logfile
 	else
-		echo "$DT update failed, check settings" >> $logfile
+		echo "$DATE update failed, check settings" >> $logfile
 	fi
 	
 }
