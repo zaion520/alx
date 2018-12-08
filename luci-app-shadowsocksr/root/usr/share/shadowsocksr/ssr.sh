@@ -763,8 +763,8 @@ stop() {
         stop_update
 }
 stop_update() {
-   	sed -i '/updategfwlist/d' /etc/crontabs/root >/dev/null 2>&1 &
-   	sed -i '/update_chinaroute.sh/d' /etc/crontabs/root >/dev/null 2>&1 &
+   	sed -i '/updategfwlist/d' /etc/crontabs/root >/dev/null 2>&1 
+
 }
 
 set_update() {
@@ -772,14 +772,13 @@ set_update() {
 	autoupdate=$(uci_get_by_type global auto_update)
 	weekupdate=$(uci_get_by_type global week_update)
 	dayupdate=$(uci_get_by_type global time_update)
+	stop_update
 	if [ "$autoupdate" = "1" ];then
 		if [ "$weekupdate" = "7" ];then
       			echo "0 $dayupdate * * * /usr/share/shadowsocksr/updategfwlist.sh" >> /etc/crontabs/root
    		else
       			echo "0 $dayupdate * * $weekupdate /usr/share/shadowsocksr/updategfwlist.sh" >> /etc/crontabs/root
    		fi
-	else
-  		stop_update
 	fi
 }
 
