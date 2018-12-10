@@ -47,6 +47,6 @@ tvlog.write=function(e,e,e)
 end
 local e=luci.http.formvalue("cbi.apply")
 if e then
-io.popen("/etc/init.d/dnspod restart")
+io.popen("/usr/sbin/dnspod restart")
 end
 return t

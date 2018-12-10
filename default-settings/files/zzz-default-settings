@@ -9,6 +9,9 @@ uci set system.@system[0].timezone=CST-8
 uci set system.@system[0].zonename=Asia/Shanghai
 uci commit system
 
+ci set upnpd.@upnpd[0].enabled=1
+uci commit upnpd
+
 uci set fstab.@global[0].anon_mount=1
 uci commit fstab
 
@@ -41,11 +44,12 @@ cat > /etc/rc.local <<EOF
 ifconfig eth0 down;ifconfig eth0 hw ether d6:57:a9:96:e6:f5;ifconfig eth0 up
 exit 0
 EOF
-
 sh /etc/rc.local
-#sed -i '/REDIRECT --to-ports 53/d' /etc/firewall.user
-#echo "iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53" >> /etc/firewall.user
-#echo "iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53" >> /etc/firewall.user
+
+
+sed -i '/REDIRECT --to-ports 53/d' /etc/firewall.user
+echo "iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53" >> /etc/firewall.user
+echo "iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53" >> /etc/firewall.user
 
 exit 0
 

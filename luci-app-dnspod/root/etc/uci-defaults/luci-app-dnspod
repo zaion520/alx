@@ -1,5 +1,7 @@
 #!/bin/sh
 
 
+
+
 rm -f /tmp/luci-indexcache
 exit 0

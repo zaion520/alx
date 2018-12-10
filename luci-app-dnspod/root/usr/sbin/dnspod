@@ -156,6 +156,7 @@ monitor(){
 	if test -z "$wirtecron" ;then
 		sed -i '/dnspod/d' /etc/crontabs/root > /dev/null 2>&1
 		echo "*/$time * * * * /usr/sbin/dnspod restart" >> /etc/crontabs/root
+		/etc/init.d/cron restart
 	fi
 }
 
@@ -163,15 +164,15 @@ clean_log(){
 	logrow=$(grep -c "" /var/log/dnspod.log)
 	if test $logrow -ge 45 ;then
 		cat /dev/null > /var/log/dnspod.log
-		echo "$DATE Clean Logger ¡" >> /var/log/dnspod.log
+		echo "$DATE Clean Logger !" >> /var/log/dnspod.log
 	fi
 }
 
 
 start() {
 	stop
-	[ "$dnspod_enable" != "1" ] && exit 0
 	monitor
+	[ "$dnspod_enable" != "1" ] && exit 0
 	check_dnspod
 }
 
@@ -189,9 +190,9 @@ stop)
 ;;
 restart)
 	stop
-	[ "$dnspod_enable" != "1" ] && exit 0
 	clean_log
 	monitor
+	[ "$dnspod_enable" != "1" ] && exit 0
 	check_dnspod
 ;;
 
