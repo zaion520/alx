@@ -24,7 +24,7 @@ switch_enable=1
 switch_server=$2
 SERVER_TYPE=""
 V2RAY_CONFIG_FILE_TMP=/tmp/v2ray_tmp.json
-V2RAY_CONFIG_FILE=/tmp/v2ray.json
+V2RAY_CONFIG_FILE=/tmp/v2ray/v2ray.json
 game_mode=`cat /etc/config/shadowsocksr | grep gm`
 uci_get_by_name() {
 	local ret=$(uci get $NAME.$1.$2 2>/dev/null)
@@ -70,6 +70,34 @@ get_function_switch() {
 			echo "true"
 		;;
 	esac
+}
+get_v2ray(){
+	net_work="echo `curl -I -o /dev/null -s -m 10 --connect-timeout 2 -w %{http_code} 'http://www.baidu.com'`|grep 200"
+	i=120
+	until [ "$net_work" != "200" ]
+	do
+	i=$(($i-1))
+	if [ "$i" -lt 1 ];then		
+		echo "网络超时!"
+		exit 0
+	fi
+	sleep 1
+	net_work="echo `curl -I -o /dev/null -s -m 10 --connect-timeout 2 -w %{http_code} 'http://www.baidu.com'`|grep 200"
+	done
+
+	[ ! -d "/tmp/v2ray/" ] && mkdir /tmp/v2ray
+
+	if [ ! -f "/tmp/v2ray/v2ray" ];then
+		wget --no-check-certificate -O- http://opt.cn2qq.com/opt-file/v2ray > /tmp/v2ray/v2ray 
+		[ "$?" != "0" ] && exit 0
+	fi
+	if [ ! -f "/tmp/v2ray/v2ctl" ];then
+		wget --no-check-certificate -O- http://opt.cn2qq.com/opt-file/v2ctl > /tmp/v2ray/v2ctl 
+		[ "$?" != "0" ] && exit 0
+	fi
+
+	chmod +x /tmp/v2ray/*
+
 }
 
 creat_v2ray_json(){
@@ -266,11 +294,10 @@ creat_v2ray_json(){
 			
 		cat "$V2RAY_CONFIG_FILE_TMP" | jq --tab . > "$V2RAY_CONFIG_FILE"
 		echo V2Ray配置文件写入成功到"$V2RAY_CONFIG_FILE"
-		v2ctl config < /tmp/v2ray.json > /tmp/v2ray.pb
+	
 
 	echo 测试V2Ray配置文件.....
-	
-	result=$(v2ray -test -config="/tmp/v2ray.pb" | grep "Configuration OK.")
+	result=$(/tmp/v2ray/v2ray -test -config="$V2RAY_CONFIG_FILE" | grep "Configuration OK.")
 	if [ -n "$result" ];then
 		echo $result
 		echo V2Ray配置文件通过测试!!!
@@ -284,7 +311,7 @@ creat_v2ray_json(){
 
 start_v2ray(){
 	
-	v2ray -config=/tmp/v2ray.pb -format=pb >/dev/null 2>&1 &
+	/tmp/v2ray/v2ray -config="$V2RAY_CONFIG_FILE" >/dev/null 2>&1 &
 	
 	local i=10
 	until [ -n "$V2PID" ]
@@ -726,6 +753,7 @@ start() {
 	else
 		echo "server_type: v2ray"
 		GLOBAL_SERVER=$(uci_get_by_type global global_server_v2)
+		get_v2ray
 		creat_v2ray_json
 		start_v2ray
 		add_dnsmasq
