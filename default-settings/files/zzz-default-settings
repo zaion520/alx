@@ -18,14 +18,12 @@ uci commit fstab
 uci set dropbear.@dropbear[0].Interface="lan"
 uci commit dropbear
 
-uci set firewall.@defaults[0].flow_offloading=1
-uci set firewall.@defaults[0].flow_offloading_hw=1
-uci commit firewall
+#uci set firewall.@defaults[0].flow_offloading=1
+#uci set firewall.@defaults[0].flow_offloading_hw=1
+#uci commit firewall
 
 
-sed -i '/option disabled/d' /etc/config/wireless
-sed -i '/set wireless.radio${devidx}.disabled/d' /lib/wifi/mac80211.sh
-wifi up
+
 
 ln -sf /sbin/ip /usr/bin/ip
 
@@ -46,6 +44,48 @@ exit 0
 EOF
 sh /etc/rc.local
 
+
+cat > /etc/config/wireless  <<EOF
+config wifi-device 'radio0'
+	option type 'mac80211'
+	option channel 'auto'
+	option hwmode '11g'
+	option path 'pci0000:00/0000:00:01.0/0000:02:00.0'
+	option htmode 'HT20'
+	option txpower '20'
+	option legacy_rates '1'
+	option country 'CN'
+
+config wifi-iface 'default_radio0'
+	option device 'radio0'
+	option network 'lan'
+	option mode 'ap'
+	option ssid 'OpenWrt'
+	option encryption 'psk2'
+	option key 'liu1987A'
+
+config wifi-device 'radio1'
+	option type 'mac80211'
+	option hwmode '11a'
+	option path 'pci0000:00/0000:00:00.0/0000:01:00.0'
+	option htmode 'VHT80'
+	option legacy_rates '1'
+	option country 'CN'
+	option channel '161'
+
+config wifi-iface
+	option device 'radio1'
+	option mode 'ap'
+	option ssid 'OpenWrt-5G'
+	option network 'lan'
+	option encryption 'psk2'
+	option key 'liu1987A'
+
+EOF
+
+sed -i '/option disabled/d' /etc/config/wireless
+sed -i '/set wireless.radio${devidx}.disabled/d' /lib/wifi/mac80211.sh
+wifi up
 
 sed -i '/REDIRECT --to-ports 53/d' /etc/firewall.user
 echo "iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53" >> /etc/firewall.user

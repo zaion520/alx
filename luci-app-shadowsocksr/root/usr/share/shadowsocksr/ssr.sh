@@ -24,7 +24,7 @@ switch_enable=1
 switch_server=$2
 SERVER_TYPE=""
 V2RAY_CONFIG_FILE_TMP=/tmp/v2ray_tmp.json
-V2RAY_CONFIG_FILE=/tmp/v2ray/v2ray.json
+V2RAY_CONFIG_FILE=/tmp/v2ray.json
 game_mode=`cat /etc/config/shadowsocksr | grep gm`
 uci_get_by_name() {
 	local ret=$(uci get $NAME.$1.$2 2>/dev/null)
@@ -297,7 +297,7 @@ creat_v2ray_json(){
 	
 
 	echo 测试V2Ray配置文件.....
-	result=$(/tmp/v2ray/v2ray -test -config="$V2RAY_CONFIG_FILE" | grep "Configuration OK.")
+	result=$(v2ray -test -config="$V2RAY_CONFIG_FILE" | grep "Configuration OK.")
 	if [ -n "$result" ];then
 		echo $result
 		echo V2Ray配置文件通过测试!!!
@@ -311,7 +311,7 @@ creat_v2ray_json(){
 
 start_v2ray(){
 	
-	/tmp/v2ray/v2ray -config="$V2RAY_CONFIG_FILE" >/dev/null 2>&1 &
+	v2ray -config="$V2RAY_CONFIG_FILE" >/dev/null 2>&1 &
 	
 	local i=10
 	until [ -n "$V2PID" ]
@@ -753,7 +753,7 @@ start() {
 	else
 		echo "server_type: v2ray"
 		GLOBAL_SERVER=$(uci_get_by_type global global_server_v2)
-		get_v2ray
+	#	get_v2ray
 		creat_v2ray_json
 		start_v2ray
 		add_dnsmasq
